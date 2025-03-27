@@ -1,5 +1,5 @@
 const express = require("express");
-const { exec } = require("child_process");
+const {exec} = require("child_process");
 const path = require("path");
 const request = require("request");
 const {access, constants} = require("node:fs");
@@ -20,7 +20,7 @@ access(YT_DLP_PATH, constants.X_OK, (err) => {
 });
 
 app.get("/stream", (req, res) => {
-    const { videoId } = req.query;
+    const {videoId} = req.query;
     if (!videoId) return res.status(400).send("Video ID is required");
 
     const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -28,7 +28,12 @@ app.get("/stream", (req, res) => {
     exec(`${YT_DLP_PATH} -f "best[ext=mp4]" -g "${videoUrl}"`, (error, stdout, stderr) => {
         if (error) {
             console.error("Error executing yt-dlp:", stderr);  // Log stderr to get more information
-            return res.status(500).send("Failed to extract video");
+            return res.status(500).json({
+                stderr,
+                error,
+                error_message: error?.message,
+                message: "Failed to extract video"
+            });
         }
 
         const streamUrl = stdout.trim();
